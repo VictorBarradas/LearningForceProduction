@@ -2,7 +2,6 @@ function [] = learn_force_production_gullapalli(arm_physics)
 % Reinforcement learning for force production of a two joint planar arm
 % theta: direction of desired force (degrees)
 % For now: count only direction
-% Checking if it works
 
 %close all
 
