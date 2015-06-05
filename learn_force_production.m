@@ -1,4 +1,4 @@
-function [W] = learn_force_production(arm_physics)
+function [W] = learn_force_production(neural_network, arm_physics)
 % Reinforcement learning for force production of a two joint planar arm
 % theta: direction of desired force (degrees)
 % For now: count only direction
@@ -7,16 +7,16 @@ function [W] = learn_force_production(arm_physics)
 
 % Input layer: neuron population for values of x around a circle (-180,180)
 
-omegaInput = 5; % Assume all input units have the same width
-nInput = 180; % Number of input units
-cInput = -180:360/nInput:180-360/nInput; % centers of the input units
+omegaInput = neural_network.omegaInput; % Assume all input units have the same width
+nInput = neural_network.nInput; % Number of input units
+cInput = neural_network.cInput; % centers of the input units
 
 sigmaNoise = 0.0*ones(nInput,1);
 
-nOutput = 6;
+nOutput = neural_network.nOutput;
 
 % Connectivity (weight) matrix (W)
-W = zeros(nInput, nOutput);
+W = neural_network.W;
 
 % Arm position
 armPosition = [45, 90];
@@ -70,6 +70,8 @@ for j = 1:nTrainingGroup
     end
     %plot(trackingVariable);
 end
+
+neural_network.W = W;
 
 % for i=1:nTrainingGroup
 %     desTheta = cTrainingGroup(randomOrder(i));
