@@ -1,4 +1,4 @@
-function [W] = learn_force_production(neural_network, arm_physics)
+function [W] = learn_force_production(neural_network, arm_model)
 % Reinforcement learning for force production of a two joint planar arm
 % theta: direction of desired force (degrees)
 % For now: count only direction
@@ -19,7 +19,7 @@ nOutput = neural_network.nOutput;
 W = neural_network.W;
 
 % Arm position
-armPosition = [45, 90];
+armPosition = arm_model.arm_position;
 
 % Reinforcement terms
 expReward = 0; % expected reward
@@ -54,7 +54,7 @@ for j = 1:nTrainingGroup
 
         muscleActivation = 1./(1 + exp(-1/10*(layerOutput)));
 
-        producedForce = arm_physics(armPosition, muscleActivation);
+        producedForce = activation2force(arm_model, muscleActivation);
         producedMagnitude = sqrt(producedForce(1)^2 + producedForce(2)^2);
         producedTheta = 180/pi*atan2(producedForce(1), producedForce(2));
         
