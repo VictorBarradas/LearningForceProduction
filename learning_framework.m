@@ -84,6 +84,23 @@ classdef learning_framework
             hold on
         end
         
+        function plot_muscle_activations(obj,nPoints)
+            cPoints = -180:360/nPoints:180 - 360/nPoints;
+            for i=1:nPoints
+                desTheta = cPoints(i);
+                inputActivation = input_layer_activation(obj.nn,desTheta);
+                layerOutput = obj.nn.W'*inputActivation;
+                muscleActivation(i,:) = 1./(1 + exp(-1/10*(layerOutput)));
+            end
+            
+            for j = 1:obj.nn.nOutput
+                figure
+                polar(cPoints'*pi/180,ones(size(cPoints')),'k');
+                hold on
+                polar(cPoints'*pi/180,muscleActivation(:,j));
+            end
+        end
+        
         %         function train_force_SRV(obj,nTrainingGroup)
         %
         %         end
