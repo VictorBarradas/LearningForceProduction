@@ -1,4 +1,4 @@
-classdef arm_model
+classdef arm_model < handle
     %Arm physics for static force production
     %   
     
@@ -19,9 +19,12 @@ classdef arm_model
             obj.F0 = F0;
         end
         
-        function f = activation2force(obj,a)
+        function [magnitude,direction] = activation2force(obj,a)
             JIT = transpose(inv(obj.J));
             f = JIT*obj.R*obj.F0*a;
+            
+            magnitude = norm(f);
+            direction = 180/pi*atan2(f(1), f(2));
         end
         
         function default_four_muscles(obj)
