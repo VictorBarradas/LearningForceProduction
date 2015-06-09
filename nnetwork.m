@@ -29,6 +29,11 @@ classdef nnetwork < handle
             a = max(0, a + inputNoise);
         end
         
+        function [neural_output,input_activation] = network_feedforward(obj,target,exploration_noise)
+            input_activation = input_layer_activation(obj,target);
+            layer_output = obj.W'*input_activation + exploration_noise;
+            neural_output = 1./(1 + exp(-1/10*(layer_output)));
+        end
         
         
     end

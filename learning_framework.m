@@ -30,19 +30,14 @@ classdef learning_framework
             
             for j = 1:nTrainingGroup
                 desTheta = cTrainingGroup(randomOrder(j));
-                for i = 1:nTrials
-                    % Activation layer
-                    
-                    inputActivation = input_layer_activation(obj.nn,desTheta);
-                    
+                for i = 1:nTrials                   
                     % Output
                     %Simulated annealing approach
                     sigmaExploration = sigmaExplorationMax*(1 - expReward)*(1 - i/nTrials)*ones(obj.nn.nOutput,1);
                     explorationNoise = normrnd(0,sigmaExploration);
-                    layerOutput = obj.nn.W'*inputActivation + explorationNoise;
                     
-                    muscleActivation = 1./(1 + exp(-1/10*(layerOutput)));
-                    
+                    [muscleActivation,inputActivation] = network_feedforward(obj.nn,desTheta,explorationNoise);
+                   
                     [magnitude,theta] = activation2force(obj.arm, muscleActivation);
                     
                     cost = (pi/180*(theta - desTheta))^2 + bb*(magnitude - desMagnitude)^2 + cc*sum(muscleActivation.^2);
@@ -88,9 +83,8 @@ classdef learning_framework
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
-                inputActivation = input_layer_activation(obj.nn,desTheta);
-                layerOutput = obj.nn.W'*inputActivation;
-                muscleActivation(i,:) = 1./(1 + exp(-1/10*(layerOutput)));
+                exploration_noise = zeros(obj.nn.nOutput,1);
+                muscleActivation(i,:) = network_feedforward(obj.nn,desTheta,exploration_noise);
             end
             
             for j = 1:obj.nn.nOutput
