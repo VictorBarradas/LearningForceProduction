@@ -6,16 +6,18 @@ classdef arm_model < handle
         arm_position %Vector with joint angles (shoulder,elbow) (Degrees)
         l %Vector with arm segment length
         J %Jacobian of the arm
-        R %Moment-arm matrix 
+        R %Moment-arm matrix
+        muscle_names %Cell array containing name of muscles
         F0 %Max force matrix
     end
     
     methods
-        function obj = arm_model(arm_position,l,J,R,F0)
+        function obj = arm_model(arm_position,l,J,R,F0,muscle_names)
             obj.arm_position = arm_position*pi/180;
             obj.l = l;
             obj.J = J;
             obj.R = R;
+            obj.muscle_names = muscle_names;
             obj.F0 = F0;
         end
         
@@ -57,6 +59,9 @@ classdef arm_model < handle
             r = 1;
             obj.R = [r -r 0 0 r -r;
                      0 0 r -r r -r];
+            obj.muscle_names = {'Shoulder flexor';'Shoulder extensor';
+                                'Elbow flexor'; 'Elbow extensor';
+                                'Biarticular flexor'; 'Biarticular extensor'};
             obj.F0 = diag([10;10;10;10;10;10]);
         end
     end

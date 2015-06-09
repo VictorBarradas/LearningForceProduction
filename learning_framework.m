@@ -98,6 +98,7 @@ classdef learning_framework
                 polar(cPoints'*pi/180,ones(size(cPoints')),'k');
                 hold on
                 polar(cPoints'*pi/180,muscleActivation(:,j));
+                title(obj.arm.muscle_names(j));
             end
         end
         
