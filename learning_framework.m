@@ -30,14 +30,14 @@ classdef learning_framework
             
             for j = 1:nTrainingGroup
                 desTheta = cTrainingGroup(randomOrder(j));
-                for i = 1:nTrials                   
+                for i = 1:nTrials
                     % Output
                     %Simulated annealing approach
                     sigmaExploration = sigmaExplorationMax*(1 - expReward)*(1 - i/nTrials)*ones(obj.nn.nOutput,1);
                     explorationNoise = normrnd(0,sigmaExploration);
                     
                     [muscleActivation,inputActivation] = network_feedforward(obj.nn,desTheta,explorationNoise);
-                   
+                    
                     [magnitude,theta] = activation2force(obj.arm, muscleActivation);
                     
                     cost = (pi/180*(theta - desTheta))^2 + bb*(magnitude - desMagnitude)^2 + cc*sum(muscleActivation.^2);
@@ -79,24 +79,45 @@ classdef learning_framework
             hold on
         end
         
-        function plot_muscle_activations(obj,nPoints)
+        function emg = muscle_activation(obj,nPoints)
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
                 exploration_noise = zeros(obj.nn.nOutput,1);
-                muscleActivation(i,:) = network_feedforward(obj.nn,desTheta,exploration_noise);
+                emg(i,:) = network_feedforward(obj.nn,desTheta,exploration_noise);
             end
-            
+        end
+        
+        function plot_muscle_activations(obj,nPoints)
+            emg = muscle_activation(obj,nPoints);
+            cPoints = -180:360/nPoints:180 - 360/nPoints;
             for j = 1:obj.nn.nOutput
                 figure
                 polar(cPoints'*pi/180,ones(size(cPoints')),'k');
                 hold on
-                polar(cPoints'*pi/180,muscleActivation(:,j));
+                polar(cPoints'*pi/180,emg(:,j));
                 title(obj.arm.muscle_names(j));
             end
         end
         
+        function [WNorm,HNorm] = synergy_id(obj,nSynergies,nPoints)
+            emg = muscle_activation(obj,nPoints);
+            %Scale emg channels for unit variance
+            stdev = std(emg');
+            emgScaled = diag(1./stdev)*emg;
+            [W,H] = nnmf(emgScaled,nSynergies);
+            %Rescaling
+            WRescaled = diag(stdev)*W
+            %Synergy vector normalization
+            m=max(WRescaled);% vector with max activation values
+            for i=1:nSynergies
+                HNorm(i,:)=H(i,:)*m(i);
+                WNorm(:,i)=WRescaled(:,i)/m(i);
+            end
+        end
+        
         %         function train_force_SRV(obj,nTrainingGroup)
+        %
         %
         %         end
         
