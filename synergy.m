@@ -1,4 +1,4 @@
-classdef synergy
+classdef synergy < handle
     %UNTITLED2 Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -24,8 +24,8 @@ classdef synergy
             %Synergy vector normalization
             m=max(WRescaled);% vector with max activation values
             for i=1:nSynergies
-                H(i,:)=Hpre(i,:)*m(i);
-                W(:,i)=WRescaled(:,i)/m(i);
+                obj.H(i,:)=Hpre(i,:)*m(i);
+                obj.W(:,i)=WRescaled(:,i)/m(i);
             end
         end
         
@@ -42,7 +42,18 @@ classdef synergy
             for i = 1:n
                 subplot(n,1,i);
                 bar(obj.H(i,:));
-                legend(num2str(obj.var(i)));
+                ylim([0,1.2]);
+                text(5.75,1.0,strcat(num2str(obj.var(i)),'%'));
+            end
+        end
+        
+        function plot_synergy_activation(obj)
+            nPoints = size(obj.W,1);
+            cPoints = -180:360/nPoints:180 - 360/nPoints;
+            cPoints = cPoints';
+            for i = 1:size(obj.H,1)
+                figure
+                polar(cPoints*pi/180,obj.W(:,i));
             end
         end
         

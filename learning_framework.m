@@ -5,13 +5,19 @@ classdef learning_framework
     properties
         nn %Neural network object
         arm %Arm model object
-        syn %Muscle synergy identification 
+        syn %Array with possible muscle synergies (according to nn.nOutput)
+        nSyn
     end
     
     methods
         function obj = learning_framework(nnetwork,arm)
             obj.nn = nnetwork;
             obj.arm = arm;
+            obj.nSyn = nnetwork.nOutput; 
+            for i = 1:obj.nSyn
+                temp(i) = synergy([]);
+            end
+            obj.syn = temp;
         end
         
         function train_force_annealing(obj,nTrainingGroup)
@@ -103,12 +109,23 @@ classdef learning_framework
             end
         end
         
-        function [W,H,var] = identify_learned_synergies(obj,nPoints,nSynergies)
-            rawEMG = muscle_activation(obj,nPoints);
-            obj.syn = synergy(rawEMG);
-            synergy_id(obj.syn,nSynergies);
-            variance_within_synergies(obj.syn);
-            %plot_synergy(obj.syn);
+        function identify_individual_synergy(obj,nPoints,nSynergy)
+            rEMG = muscle_activation(obj,nPoints);
+            obj.syn(nSynergy).rawEMG = rEMG;
+            synergy_id(obj.syn(nSynergy),nSynergy);
+            variance_within_synergies(obj.syn(nSynergy));
+        end
+        
+        function identify_all_synergies(obj,nPoints)
+            for i = 1:obj.nSyn
+                identify_individual_synergy(obj,nPoints,i);
+            end
+        end
+        
+        function plot_found_synergies(obj)
+            for i = 1:obj.nSyn
+                plot_synergy(obj.syn(i));
+            end
         end
         
         
