@@ -7,11 +7,13 @@ classdef synergy < handle
         W %Matrix with control coefficients for synergies
         H %Matrix with synergies
         var
+        muscle_names %Names of muscles in the system
     end
     
     methods
-        function obj = synergy(remg)
+        function obj = synergy(remg,musc_n)
             obj.rawEMG = remg;
+            obj.muscle_names = musc_n;
         end
         
         function synergy_id(obj,nSynergies)
@@ -44,6 +46,14 @@ classdef synergy < handle
                 bar(obj.H(i,:));
                 ylim([0,1.2]);
                 text(5.75,1.0,strcat(num2str(obj.var(i)),'%'));
+                if i == 1
+                    title(strcat(num2str(n),{' muscle synergies assumed'}));
+                end
+                if i == n
+                    set(gca,'XTickLabel',obj.muscle_names);
+                else
+                    set(gca,'XTickLabel',{});
+                end
             end
         end
         
@@ -54,6 +64,23 @@ classdef synergy < handle
             for i = 1:size(obj.H,1)
                 figure
                 polar(cPoints*pi/180,obj.W(:,i));
+            end
+        end
+        
+        function plot_reconstruction(obj)
+            nPoints = size(obj.W,1);
+            cPoints = -180:360/nPoints:180 - 360/nPoints;
+            cPoints = cPoints';
+            reconstruct = obj.W*obj.H;
+            for i = 1:size(reconstruct,2)
+                figure
+                polar(cPoints'*pi/180,ones(size(cPoints')),'k');
+                hold on
+                h1 = polar(cPoints*pi/180,obj.rawEMG(:,i));
+                hold on
+                h2 = polar(cPoints*pi/180,reconstruct(:,i),'r');
+                legend([h1,h2],{'raw','reconstructed'},'Location','northeastoutside');
+                title(obj.muscle_names(i));
             end
         end
         

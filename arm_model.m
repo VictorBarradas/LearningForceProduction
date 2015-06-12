@@ -59,9 +59,9 @@ classdef arm_model < handle
             r = 1;
             obj.R = [r -r 0 0 r -r;
                      0 0 r -r r -r];
-            obj.muscle_names = {'Shoulder flexor';'Shoulder extensor';
-                                'Elbow flexor'; 'Elbow extensor';
-                                'Biarticular flexor'; 'Biarticular extensor'};
+            obj.muscle_names = {'Sh fl';'Sh ext';
+                                'Elb fl'; 'Elb ext';
+                                'Bi fl'; 'Bi ext'};
             obj.F0 = diag([10;10;10;10;10;10]);
         end
     end

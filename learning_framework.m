@@ -15,7 +15,7 @@ classdef learning_framework
             obj.arm = arm;
             obj.nSyn = nnetwork.nOutput; 
             for i = 1:obj.nSyn
-                temp(i) = synergy([]);
+                temp(i) = synergy([],arm.muscle_names);
             end
             obj.syn = temp;
         end
