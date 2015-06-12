@@ -5,6 +5,7 @@ classdef learning_framework
     properties
         nn %Neural network object
         arm %Arm model object
+        syn %Muscle synergy identification 
     end
     
     methods
@@ -65,6 +66,8 @@ classdef learning_framework
                 [magnitude(i),theta(i)] = activation2force(obj.arm, muscleActivation);
             end
             
+            figure
+            
             plot(angle,theta,'.');
             title('Training positions')
             hold on
@@ -100,21 +103,15 @@ classdef learning_framework
             end
         end
         
-        function [WNorm,HNorm] = synergy_id(obj,nSynergies,nPoints)
-            emg = muscle_activation(obj,nPoints);
-            %Scale emg channels for unit variance
-            stdev = std(emg');
-            emgScaled = diag(1./stdev)*emg;
-            [W,H] = nnmf(emgScaled,nSynergies);
-            %Rescaling
-            WRescaled = diag(stdev)*W
-            %Synergy vector normalization
-            m=max(WRescaled);% vector with max activation values
-            for i=1:nSynergies
-                HNorm(i,:)=H(i,:)*m(i);
-                WNorm(:,i)=WRescaled(:,i)/m(i);
-            end
+        function [W,H,var] = identify_learned_synergies(obj,nPoints,nSynergies)
+            rawEMG = muscle_activation(obj,nPoints);
+            obj.syn = synergy(rawEMG);
+            synergy_id(obj.syn,nSynergies);
+            variance_within_synergies(obj.syn);
+            %plot_synergy(obj.syn);
         end
+        
+        
         
         %         function train_force_SRV(obj,nTrainingGroup)
         %
