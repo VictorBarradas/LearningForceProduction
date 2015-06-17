@@ -4,8 +4,8 @@ classdef synergy < handle
     
     properties
         rawEMG %Matrix containing raw EMG from trials
-        W %Matrix with control coefficients for synergies
-        H %Matrix with synergies
+        W %Matrix with synergies
+        H %Matrix with control coefficients for synergies
         var
         muscle_names %Names of muscles in the system
     end
@@ -81,6 +81,11 @@ classdef synergy < handle
                 legend([h1,h2],{'raw','reconstructed'},'Location','northeastoutside');
                 title(obj.muscle_names(i));
             end
+        end
+        
+        function rr = rsquared(obj)            
+            r = corr2(obj.rawEMG,obj.W*obj.H);
+            rr = r^2;
         end
         
     end

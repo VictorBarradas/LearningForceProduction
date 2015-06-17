@@ -171,6 +171,19 @@ classdef learning_framework
                 plot_synergy(obj.syn(i));
             end
         end
+        
+        function plot_rr_curve(obj)
+            for i = 1:obj.nSyn
+                rr(i) = rsquared(obj.syn(i));
+            end
+            figure
+            plot(rr);
+            xlabel('Number of synergies');
+            ylabel('Corr Coef');
+            ylim([0 1]);
+            set(gca,'XTick',1:1:obj.nSyn);
+            title('Goodness of fit');
+        end
     end
     
 end
