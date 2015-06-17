@@ -39,11 +39,11 @@ classdef synergy < handle
         end
         
         function plot_synergy(obj)
-            n = size(obj.H,1);
+            n = size(obj.W,2);
             figure;
             for i = 1:n
                 subplot(n,1,i);
-                bar(obj.H(i,:));
+                bar(obj.W(:,i));
                 ylim([0,1.2]);
                 text(5.75,1.0,strcat(num2str(obj.var(i)),'%'));
                 if i == 1
@@ -58,27 +58,26 @@ classdef synergy < handle
         end
         
         function plot_synergy_activation(obj)
-            nPoints = size(obj.W,1);
+            nPoints = size(obj.H,1);
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             cPoints = cPoints';
-            for i = 1:size(obj.H,1)
+            for i = 1:size(obj.W,1)
                 figure
-                polar(cPoints*pi/180,obj.W(:,i));
+                polar(cPoints*pi/180,obj.H(:,i));
             end
         end
         
         function plot_reconstruction(obj)
-            nPoints = size(obj.W,1);
+            nPoints = size(obj.H,2);
             cPoints = -180:360/nPoints:180 - 360/nPoints;
-            cPoints = cPoints';
             reconstruct = obj.W*obj.H;
-            for i = 1:size(reconstruct,2)
+            for i = 1:size(reconstruct,1)
                 figure
-                polar(cPoints'*pi/180,ones(size(cPoints')),'k');
+                polar(cPoints*pi/180,ones(size(cPoints)),'k');
                 hold on
-                h1 = polar(cPoints*pi/180,obj.rawEMG(:,i));
+                h1 = polar(cPoints*pi/180,obj.rawEMG(i,:));
                 hold on
-                h2 = polar(cPoints*pi/180,reconstruct(:,i),'r');
+                h2 = polar(cPoints*pi/180,reconstruct(i,:),'r');
                 legend([h1,h2],{'raw','reconstructed'},'Location','northeastoutside');
                 title(obj.muscle_names(i));
             end

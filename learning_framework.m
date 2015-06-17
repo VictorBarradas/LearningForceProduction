@@ -13,7 +13,7 @@ classdef learning_framework
         function obj = learning_framework(nnetwork,arm)
             obj.nn = nnetwork;
             obj.arm = arm;
-            obj.nSyn = nnetwork.nOutput; 
+            obj.nSyn = nnetwork.nOutput;
             for i = 1:obj.nSyn
                 temp(i) = synergy([],arm.muscle_names);
             end
@@ -61,14 +61,54 @@ classdef learning_framework
             end
         end
         
+        function train_force_SRV(obj,nTrainingGroup)
+            % Reinforcement terms
+            alpha = 0.005; % learning rate
+            beta = 0.005; % learning rate
+            rewardThreshold = 1;
+            nTrials = 3000;
+            
+            cTrainingGroup = -180:360/nTrainingGroup:180-360/nTrainingGroup;
+            randomOrder = randperm(nTrainingGroup);
+            bb = 1/8;
+            cc = 1/2;
+            desMagnitude = 5;
+            
+            for j = 1:nTrainingGroup
+                desTheta = cTrainingGroup(randomOrder(j));
+                for i = 1:nTrials
+                    [muscleActivation,inputActivation,expReward,activationOutput,muOutput,sigmaOutput] = network_feedforward(obj.nn,desTheta);
+                    
+                    [magnitude,theta] = activation2force(obj.arm, muscleActivation);
+                    
+                    cost = (pi/180*(theta - desTheta))^2 + bb*(magnitude - desMagnitude)^2 + cc*sum(muscleActivation.^2);
+                    reward = max(0,(rewardThreshold - cost)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
+                  
+                    % Learning
+                    deltaW = (reward - expReward).*(activationOutput - muOutput)./sigmaOutput;
+                    weightTerm = inputActivation*deltaW';
+                    obj.nn.W = obj.nn.W + alpha*weightTerm;
+                    obj.nn.wThreshold = obj.nn.wThreshold + alpha*deltaW;
+                    
+                    deltaV = reward - expReward;
+                    obj.nn.V = obj.nn.V + beta*inputActivation*deltaV';
+                    obj.nn.vThreshold = obj.nn.vThreshold + beta*deltaV;
+                    
+                end
+            end        
+        end
+        
         function plot_learned_force(obj,nPoints)
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
                 angle(i) = desTheta;
-                inputActivation = input_layer_activation(obj.nn,desTheta);
-                layerOutput = obj.nn.W'*inputActivation;
-                muscleActivation = 1./(1 + exp(-1/10*(layerOutput)));
+                if strcmp(obj.nn.type,'srv') == 1
+                    muscleActivation = network_feedforward(obj.nn,desTheta);
+                else
+                    exploration_noise = zeros(obj.nn.nOutput,1);
+                    muscleActivation = network_feedforward(obj.nn,desTheta,exploration_noise);
+                end
                 [magnitude(i),theta(i)] = activation2force(obj.arm, muscleActivation);
             end
             
@@ -92,20 +132,24 @@ classdef learning_framework
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
-                exploration_noise = zeros(obj.nn.nOutput,1);
-                emg(i,:) = network_feedforward(obj.nn,desTheta,exploration_noise);
+                if strcmp(obj.nn.type,'srv') == 1
+                    emg(:,i) = network_feedforward(obj.nn,desTheta);
+                else
+                    noise = zeros(obj.nn.nOutput,1);
+                    emg(:,i) = network_feedforward(obj.nn,desTheta,noise);
+                end
             end
         end
         
         function plot_muscle_activations(obj,nPoints)
             emg = muscle_activation(obj,nPoints);
             cPoints = -180:360/nPoints:180 - 360/nPoints;
-            for j = 1:obj.nn.nOutput
+            for i = 1:obj.nn.nOutput
                 figure
-                polar(cPoints'*pi/180,ones(size(cPoints')),'k');
+                polar(cPoints*pi/180,ones(size(cPoints)),'k');
                 hold on
-                polar(cPoints'*pi/180,emg(:,j));
-                title(obj.arm.muscle_names(j));
+                polar(cPoints*pi/180,emg(i,:));
+                title(obj.arm.muscle_names(i));
             end
         end
         
@@ -127,15 +171,6 @@ classdef learning_framework
                 plot_synergy(obj.syn(i));
             end
         end
-        
-        
-        
-        %         function train_force_SRV(obj,nTrainingGroup)
-        %
-        %
-        %         end
-        
-        
     end
     
 end

@@ -23,7 +23,7 @@ wThreshold = zeros(nOutput,1);
 vThreshold = zeros(nOutput,1);
 
 % Arm position
-armPosition = [0, 90];
+armPosition = [45, 90];
 
 % Reinforcement terms
 alpha = 0.005; % learning rate

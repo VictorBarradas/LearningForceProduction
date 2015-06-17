@@ -9,6 +9,7 @@ classdef nnetwork < handle
         sigmaInputUnits; %SD of noise in network inputs
         nOutput %Number of output units
         W  %Weight matrix
+        type = 'normal';
     end
     
     methods
@@ -34,7 +35,6 @@ classdef nnetwork < handle
             layer_output = obj.W'*input_activation + exploration_noise;
             neural_output = 1./(1 + exp(-1/10*(layer_output)));
         end
-        
         
     end
 end
