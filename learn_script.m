@@ -18,10 +18,12 @@ plot_muscle_activations(learn_process,200);
 
 
 identify_all_synergies(learn_process,200);
-plot_rr_curve(learn_process);
 
-plot_found_synergies(learn_process);
-plot_reconstruction(learn_process.syn(3));
+plot_rr_curve(learn_process);
+plot_vaf_curve(learn_process);
+
+%plot_found_synergies(learn_process);
+%plot_reconstruction(learn_process.syn(3));
 
 %end
 

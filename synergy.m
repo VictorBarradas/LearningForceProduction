@@ -83,9 +83,15 @@ classdef synergy < handle
             end
         end
         
-        function rr = rsquared(obj)            
+        function rr = rsquared(obj)                        
             r = corr2(obj.rawEMG,obj.W*obj.H);
             rr = r^2;
+        end
+        
+        function VAF = vaf_fit(obj)
+            X=cat(3,obj.rawEMG,obj.W*obj.H);    
+            UR=(sum(sum(prod(X,3))))^2/(sum(sum((obj.rawEMG).^2))*sum(sum((obj.W*obj.H).^2)));
+            VAF=100*UR;
         end
         
     end

@@ -43,7 +43,9 @@ classdef arm_model < handle
             obj.R = [r -r 0 0;
                      0 0 r -r];
             obj.F0 = diag([10;10;10;10]);
-                 
+            
+            obj.muscle_names = {'Sh fl';'Sh ext';
+                                'Elb fl'; 'Elb ext'};     
         end
         
         function obj = default_six_muscles(obj)

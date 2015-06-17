@@ -184,6 +184,19 @@ classdef learning_framework
             set(gca,'XTick',1:1:obj.nSyn);
             title('Goodness of fit');
         end
+        
+        function plot_vaf_curve(obj)
+            for i = 1:obj.nSyn
+                vaf(i) = vaf_fit(obj.syn(i));
+            end
+            figure
+            plot(vaf);
+            xlabel('Number of synergies');
+            ylabel('VAF [%]');
+            ylim([0 100]);
+            set(gca,'XTick',1:1:obj.nSyn);
+            title('Goodness of fit');
+        end
     end
     
 end
