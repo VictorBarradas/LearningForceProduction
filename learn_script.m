@@ -1,3 +1,4 @@
+
 close all
 clc
 clear
@@ -14,16 +15,20 @@ train_force_SRV(learn_process,200);
 
 
 plot_learned_force(learn_process,200)
-plot_muscle_activations(learn_process,200);
+%plot_muscle_activations(learn_process,200);
+plot_learning_error(learn_process,200)
 
 
-identify_all_synergies(learn_process,200);
-
-plot_rr_curve(learn_process);
-plot_vaf_curve(learn_process);
-
-%plot_found_synergies(learn_process);
-%plot_reconstruction(learn_process.syn(3));
-
-%end
+% identify_all_synergies(learn_process,200);
+% 
+% plot_rr_curve(learn_process);
+% plot_vaf_curve(learn_process);
+% %plot_vaf_muscle_curve(learn_process);
+% 
+% plot_synergy(learn_process.syn(4));
+% 
+% %plot_found_synergies(learn_process);
+% %plot_reconstruction(learn_process.syn(3));
+% 
+% %end
 

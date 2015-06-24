@@ -15,7 +15,7 @@ classdef learning_framework
             obj.arm = arm;
             obj.nSyn = nnetwork.nOutput;
             for i = 1:obj.nSyn
-                temp(i) = synergy([],arm.muscle_names);
+                temp(i) = synergy([],arm.muscle_names,i);
             end
             obj.syn = temp;
         end
@@ -83,7 +83,7 @@ classdef learning_framework
                     
                     cost = (pi/180*(theta - desTheta))^2 + bb*(magnitude - desMagnitude)^2 + cc*sum(muscleActivation.^2);
                     reward = max(0,(rewardThreshold - cost)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
-                  
+                    
                     % Learning
                     deltaW = (reward - expReward).*(activationOutput - muOutput)./sigmaOutput;
                     weightTerm = inputActivation*deltaW';
@@ -95,7 +95,7 @@ classdef learning_framework
                     obj.nn.vThreshold = obj.nn.vThreshold + beta*deltaV;
                     
                 end
-            end        
+            end
         end
         
         function plot_learned_force(obj,nPoints)
@@ -128,6 +128,32 @@ classdef learning_framework
             hold on
         end
         
+        function plot_learning_error(obj,nPoints)
+            cPoints = -180:360/nPoints:180 - 360/nPoints;
+            for i=1:nPoints
+                desTheta = cPoints(i);
+                angle(i) = desTheta;
+                if strcmp(obj.nn.type,'srv') == 1
+                    muscleActivation = network_feedforward(obj.nn,desTheta);
+                else
+                    exploration_noise = zeros(obj.nn.nOutput,1);
+                    muscleActivation = network_feedforward(obj.nn,desTheta,exploration_noise);
+                end
+                [magnitude(i),theta(i)] = activation2force(obj.arm, muscleActivation);
+            end
+            figure
+            
+            plot(angle,angle_subtraction(angle,theta));
+            xlabel('Target direction');
+            ylabel('Error in target direction')
+            
+            figure
+            
+            plot(angle,5-magnitude);
+            xlabel('Target direction');
+            ylabel('Error in force magnitude');
+        end
+        
         function emg = muscle_activation(obj,nPoints)
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
@@ -156,7 +182,7 @@ classdef learning_framework
         function identify_individual_synergy(obj,nPoints,nSynergy)
             rEMG = muscle_activation(obj,nPoints);
             obj.syn(nSynergy).rawEMG = rEMG;
-            synergy_id(obj.syn(nSynergy),nSynergy);
+            synergy_id(obj.syn(nSynergy));
             variance_within_synergies(obj.syn(nSynergy));
         end
         
@@ -196,6 +222,22 @@ classdef learning_framework
             ylim([0 100]);
             set(gca,'XTick',1:1:obj.nSyn);
             title('Goodness of fit');
+        end
+        
+        function plot_vaf_muscle_curve(obj)
+            figure
+            color_code = hsv(obj.nSyn);
+            for i = 1:obj.nSyn
+                vaf_muscle = vaf_fit_muscles(obj.syn(i));
+                plot(vaf_muscle,'color',color_code(i,:));
+                hold on
+            end
+            xlabel('Number of synergies');
+            ylabel('VAF [%]');
+            ylim([0 100]);
+            set(gca,'XTick',1:1:obj.nSyn);
+            title('Goodness of fit for individual muscles');
+            legend(obj.arm.muscle_names);
         end
     end
     

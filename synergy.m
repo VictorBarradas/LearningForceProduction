@@ -4,31 +4,35 @@ classdef synergy < handle
     
     properties
         rawEMG %Matrix containing raw EMG from trials
+        nSynergies %Number of muscle synergies 
         W %Matrix with synergies
         H %Matrix with control coefficients for synergies
+        recEMG %Reconstructed EMG data
         var
         muscle_names %Names of muscles in the system
     end
     
     methods
-        function obj = synergy(remg,musc_n)
+        function obj = synergy(remg,musc_n,n_syn)
             obj.rawEMG = remg;
             obj.muscle_names = musc_n;
+            obj.nSynergies = n_syn;
         end
         
-        function synergy_id(obj,nSynergies)
+        function synergy_id(obj)
             %Scale emg channels for unit variance
             stdev = std(obj.rawEMG');
             emgScaled = diag(1./stdev)*obj.rawEMG;
-            [Wpre,Hpre] = nnmf(emgScaled,nSynergies);
+            [Wpre,Hpre] = nnmf(emgScaled,obj.nSynergies);
             %Rescaling
             WRescaled = diag(stdev)*Wpre;
             %Synergy vector normalization
             m=max(WRescaled);% vector with max activation values
-            for i=1:nSynergies
+            for i=1:obj.nSynergies
                 obj.H(i,:)=Hpre(i,:)*m(i);
                 obj.W(:,i)=WRescaled(:,i)/m(i);
             end
+            obj.recEMG = obj.W*obj.H;
         end
         
         function variance_within_synergies(obj)
@@ -92,6 +96,14 @@ classdef synergy < handle
             X=cat(3,obj.rawEMG,obj.W*obj.H);    
             UR=(sum(sum(prod(X,3))))^2/(sum(sum((obj.rawEMG).^2))*sum(sum((obj.W*obj.H).^2)));
             VAF=100*UR;
+        end
+        
+        function VAF = vaf_fit_muscles(obj)
+            for i = 1:size(obj.rawEMG,1)
+                X = [obj.rawEMG(i,:) obj.recEMG(i,:)];
+                VAF(i) = sum((prod(X,1)))^2 / (sum(obj.rawEMG(i,:).^2)*sum(obj.recEMG(i,:).^2)); %regression sum of squares/total sum of squares
+            end
+            VAF = 100*VAF;
         end
         
     end

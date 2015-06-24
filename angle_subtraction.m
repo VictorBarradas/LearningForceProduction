@@ -5,13 +5,17 @@ function [thetaResult] = angle_subtraction(theta1, theta2)
 n = length(theta2);
 thetaResult = zeros(n,1);
 
+if length(theta1) == 1
+    theta1 = theta1*ones(n,1);
+end
+
 for i = 1:n
-    if theta1 - theta2(i) <= -180
-        thetaResult(i) = -(- 180 - theta1) + (180 - theta2(i));
-    elseif theta1 - theta2(i) >= 180
-        thetaResult(i) = -((180 - theta1) - (- 180 - theta2(i)));
+    if theta1(i) - theta2(i) <= -180
+        thetaResult(i) = -(- 180 - theta1(i)) + (180 - theta2(i));
+    elseif theta1(i) - theta2(i) >= 180
+        thetaResult(i) = -((180 - theta1(i)) - (- 180 - theta2(i)));
     else
-        thetaResult(i) = theta1 - theta2(i);
+        thetaResult(i) = theta1(i) - theta2(i);
     end
 end
 
