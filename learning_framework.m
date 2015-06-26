@@ -61,27 +61,33 @@ classdef learning_framework
             end
         end
         
-        function train_force_SRV(obj,nTrainingGroup)
+        function train_force_SRV(obj,nTrainingGroup,forceLevels)
             % Reinforcement terms
             alpha = 0.005; % learning rate
             beta = 0.005; % learning rate
             rewardThreshold = 1;
             nTrials = 3000;
             
-            cTrainingGroup = -180:360/nTrainingGroup:180-360/nTrainingGroup;
-            randomOrder = randperm(nTrainingGroup);
+            stackedForceLevels = repmat(forceLevels,nTrainingGroup,1);
+            stackedForceLevels = stackedForceLevels(:);
+            cTrainingGroup = repmat(-180:360/nTrainingGroup:180-360/nTrainingGroup,1,length(forceLevels));
+            cTrainingGroup = [cTrainingGroup;stackedForceLevels'];
+            randomOrder = randperm(length(forceLevels)*nTrainingGroup);
+            aa = 1/8;
             bb = 1/8;
-            cc = 1/2;
-            desMagnitude = 5;
+            cc = 1/8;
             
-            for j = 1:nTrainingGroup
-                desTheta = cTrainingGroup(randomOrder(j));
+            for j = 1:nTrainingGroup*length(forceLevels)
+                desTheta = cTrainingGroup(1,randomOrder(j));
+                desMagnitude = cTrainingGroup(2,randomOrder(j));
+                desForce = desMagnitude*[cos(desTheta*pi/180);sin(desTheta*pi/180)];
                 for i = 1:nTrials
-                    [muscleActivation,inputActivation,expReward,activationOutput,muOutput,sigmaOutput] = network_feedforward(obj.nn,desTheta);
+                    [muscleActivation,inputActivation,expReward,activationOutput,muOutput,sigmaOutput] = network_feedforward(obj.nn,desTheta,desMagnitude);
                     
-                    [magnitude,theta] = activation2force(obj.arm, muscleActivation);
+                    endForce = activation2force(obj.arm, muscleActivation);
+                    errorForce = norm(desForce - endForce);
                     
-                    cost = (pi/180*(theta - desTheta))^2 + bb*(magnitude - desMagnitude)^2 + cc*sum(muscleActivation.^2);
+                    cost = aa*errorForce + cc*sum(muscleActivation.^2);
                     reward = max(0,(rewardThreshold - cost)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
                     
                     % Learning
@@ -98,48 +104,55 @@ classdef learning_framework
             end
         end
         
-        function plot_learned_force(obj,nPoints)
-            cPoints = -180:360/nPoints:180 - 360/nPoints;
-            for i=1:nPoints
-                desTheta = cPoints(i);
-                angle(i) = desTheta;
-                if strcmp(obj.nn.type,'srv') == 1
-                    muscleActivation = network_feedforward(obj.nn,desTheta);
-                else
-                    exploration_noise = zeros(obj.nn.nOutput,1);
-                    muscleActivation = network_feedforward(obj.nn,desTheta,exploration_noise);
+        function plot_learned_force(obj,nPoints,forceLevels)            
+            cPoints = -180:360/nPoints:180-360/nPoints;
+            for j = 1:length(forceLevels)
+                for i=1:nPoints
+                    desTheta = cPoints(1,i);
+                    desMagnitude = forceLevels(j);
+                    angle(i) = desTheta;
+                    if strcmp(obj.nn.type,'srv') == 1
+                        muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
+                    else
+                        exploration_noise = zeros(obj.nn.nOutput,1);
+                        muscleActivation = network_feedforward(obj.nn,desTheta,exploration_noise);
+                    end
+                    endForce = activation2force(obj.arm, muscleActivation);
+                    theta(i) = 180/pi*atan2(endForce(2), endForce(1));
+                    magnitude(i) = norm(endForce);  
                 end
-                [magnitude(i),theta(i)] = activation2force(obj.arm, muscleActivation);
+                
+                figure
+                
+                plot(angle,theta,'.');
+                title('Training positions')
+                hold on
+                plot(angle,angle)
+                xlabel('Target direction')
+                ylabel('Learned force direction');
+                
+                figure
+                
+                polar(cPoints*pi/180,magnitude);
+                title('Learned force magnitude for every direction')
+                hold on
             end
-            
-            figure
-            
-            plot(angle,theta,'.');
-            title('Training positions')
-            hold on
-            plot(angle,angle)
-            xlabel('Target direction')
-            ylabel('Learned force direction');
-            
-            figure
-            
-            polar(cPoints*pi/180,magnitude);
-            title('Learned force magnitude for every direction')
-            hold on
         end
         
-        function plot_learning_error(obj,nPoints)
+        function plot_learning_error(obj,nPoints,desMagnitude)
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
                 angle(i) = desTheta;
                 if strcmp(obj.nn.type,'srv') == 1
-                    muscleActivation = network_feedforward(obj.nn,desTheta);
+                    muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
                 else
                     exploration_noise = zeros(obj.nn.nOutput,1);
                     muscleActivation = network_feedforward(obj.nn,desTheta,exploration_noise);
                 end
-                [magnitude(i),theta(i)] = activation2force(obj.arm, muscleActivation);
+                endForce = activation2force(obj.arm, muscleActivation);
+                magnitude(i) = norm(endForce);
+                theta(i) = 180/pi*atan2(endForce(2), endForce(1));
             end
             figure
             
@@ -149,17 +162,17 @@ classdef learning_framework
             
             figure
             
-            plot(angle,5-magnitude);
+            plot(angle,desMagnitude-magnitude);
             xlabel('Target direction');
             ylabel('Error in force magnitude');
         end
         
-        function emg = muscle_activation(obj,nPoints)
+        function emg = muscle_activation(obj,nPoints,desMagnitude)
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
                 if strcmp(obj.nn.type,'srv') == 1
-                    emg(:,i) = network_feedforward(obj.nn,desTheta);
+                    emg(:,i) = network_feedforward(obj.nn,desTheta,desMagnitude);
                 else
                     noise = zeros(obj.nn.nOutput,1);
                     emg(:,i) = network_feedforward(obj.nn,desTheta,noise);
@@ -167,8 +180,8 @@ classdef learning_framework
             end
         end
         
-        function plot_muscle_activations(obj,nPoints)
-            emg = muscle_activation(obj,nPoints);
+        function plot_muscle_activations(obj,nPoints,desMagnitude)
+            emg = muscle_activation(obj,nPoints,desMagnitude);
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i = 1:obj.nn.nOutput
                 figure

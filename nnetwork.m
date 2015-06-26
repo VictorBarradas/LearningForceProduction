@@ -21,13 +21,13 @@ classdef nnetwork < handle
             obj.sigmaInputUnits = 0.0*ones(nInput,1);
         end
         
-        function a = input_layer_activation(obj,target)
+        function a = input_layer_activation(obj,direction,magnitude)
             % Input layer activation when presented to a target (RBF)
-            a = exp(-log(2)*(angle_subtraction(target, obj.cInput)/obj.omegaInput).^2); 
+            a = exp(-log(2)*(angle_subtraction(direction, obj.cInput)/obj.omegaInput).^2); 
             
             % Noise injection
             inputNoise = normrnd(zeros(obj.nInput,1), obj.sigmaInputUnits);
-            a = max(0, a + inputNoise);
+            a = magnitude*max(0, a + inputNoise);
         end
         
         function [neural_output,input_activation] = network_feedforward(obj,target,exploration_noise)

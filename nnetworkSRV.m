@@ -17,12 +17,12 @@ classdef nnetworkSRV < nnetwork
             obj.type = 'srv';
         end
         
-        function a = input_layer_activation(obj,target)
-            a = input_layer_activation@nnetwork(obj,target);
+        function a = input_layer_activation(obj,direction,magnitude)
+            a = input_layer_activation@nnetwork(obj,direction,magnitude);
         end
         
-        function [neural_output,input_activation,expReward,activationOutput,muOutput,sigmaOutput] = network_feedforward(obj,target)
-            input_activation = input_layer_activation(obj,target);
+        function [neural_output,input_activation,expReward,activationOutput,muOutput,sigmaOutput] = network_feedforward(obj,direction,magnitude)
+            input_activation = input_layer_activation(obj,direction,magnitude);
             muOutput = obj.W'*input_activation + obj.wThreshold;
             expReward = obj.V'*input_activation + obj.vThreshold;
             sigmaOutput = max(1 - expReward, 0.01);

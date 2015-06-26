@@ -34,12 +34,14 @@ nTrials = 3000;
 nTrainingGroup = 180;
 cTrainingGroup = -180:360/nTrainingGroup:180-360/nTrainingGroup;
 randomOrder = randperm(nTrainingGroup);
-magnitudeCostWeight = 1/8;
-muscActCostWeight = 1/2;
+targetCost = 1/10;
+%magnitudeCostWeight = 1/8;
+muscActCostWeight = 1/8;
 desMagnitude = 5;
 
 for j = 1:nTrainingGroup
     desTheta = cTrainingGroup(randomOrder(j));
+    desiredForce = desMagnitude*[cos(desTheta*pi/180);sin(desTheta*pi/180)];
     for i = 1:nTrials
         % Activation layer
         
@@ -58,12 +60,15 @@ for j = 1:nTrainingGroup
         muscleActivation = 1./(1 + exp(-activationOutput));
 
         producedForce = arm_physics(armPosition, muscleActivation);
-        producedMagnitude = sqrt(producedForce(1)^2 + producedForce(2)^2);
-        producedTheta = 180/pi*atan2(producedForce(1), producedForce(2));
+        %producedMagnitude = sqrt(producedForce(1)^2 + producedForce(2)^2);
+        %producedTheta = 180/pi*atan2(producedForce(1), producedForce(2));
+        forceError = norm(desiredForce-producedForce);
         
-        cost = (pi/180*(producedTheta - desTheta))^2 + magnitudeCostWeight*(producedMagnitude - desMagnitude)^2 + muscActCostWeight*sum(muscleActivation.^2);
+        
+        %cost = (pi/180*(producedTheta - desTheta))^2 + magnitudeCostWeight*(producedMagnitude - desMagnitude)^2 + muscActCostWeight*sum(muscleActivation.^2);
+        cost = targetCost*forceError + muscActCostWeight*sum(muscleActivation.^2);
         reward = max(0,(rewardThreshold - cost)/rewardThreshold)*ones(nOutput,1); % reward function
-        trackingVariable(i) = cost;
+        trackingVariable(i) = forceError;
         
         % Learning
         deltaW = (reward - expReward).*(activationOutput - muOutput)./sigmaOutput;
@@ -80,7 +85,7 @@ for j = 1:nTrainingGroup
 end
 
 for i=1:nTrainingGroup
-    desTheta = cTrainingGroup(randomOrder(i));
+    desTheta = cTrainingGroup(i);
     angle(i) = desTheta;
     inputActivation = exp(-log(2)*(angle_subtraction(desTheta, cInput)/omegaInput).^2); %RBF
     inputNoise = max(0, normrnd(zeros(nInput,1), sigmaNoise));
@@ -94,10 +99,10 @@ for i=1:nTrainingGroup
     muscleActivation = 1./(1 + exp(-activationOutput));
 
     producedForce = arm_physics(armPosition, muscleActivation);
-    producedMagnitude(i) = sqrt(producedForce(1)^2 + producedForce(2)^2);
-    producedTheta(i) = 180/pi*atan2(producedForce(1), producedForce(2));
+    producedMagnitude(i) = norm(producedForce);
+    producedTheta(i) = 180/pi*atan2(producedForce(2), producedForce(1));
 end
-
+figure
 plot(angle,producedTheta,'.');
 title('Training positions')
 hold on

@@ -10,13 +10,13 @@ nn = nnetworkSRV(180,size(arm.R,2));
 %for j = 1:4
 %nn = nnetwork(180,size(arm.R,2));
 learn_process = learning_framework(nn,arm);
-train_force_SRV(learn_process,200);
+train_force_SRV(learn_process,200,[2]);
 %train_force_annealing(learn_process,20);
 
 
-plot_learned_force(learn_process,200)
-%plot_muscle_activations(learn_process,200);
-plot_learning_error(learn_process,200)
+plot_learned_force(learn_process,200,[2]);
+%plot_muscle_activations(learn_process,200,[4]);
+plot_learning_error(learn_process,200,2)
 
 
 % identify_all_synergies(learn_process,200);
