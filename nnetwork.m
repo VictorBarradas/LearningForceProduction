@@ -2,14 +2,14 @@ classdef nnetwork < handle
     %Simple two-layer neural network
     %
     
-    properties
-        nInput %Number of input units
-        cInput %Centers of the input units
+    properties              
         omegaInput = 5; %Width of input units RBF
         sigmaInputUnits; %SD of noise in network inputs
+        nInput %Number of input units
         nOutput %Number of output units
+        cInput %Centers of the input units
         W  %Weight matrix
-        type = 'normal';
+        type
     end
     
     methods
@@ -19,6 +19,7 @@ classdef nnetwork < handle
             obj.cInput = -180:360/nInput:180-360/nInput;
             obj.W = zeros(nInput,nOutput);
             obj.sigmaInputUnits = 0.0*ones(nInput,1);
+            obj.type = 'normal';
         end
         
         function a = input_layer_activation(obj,direction,magnitude)
@@ -27,7 +28,7 @@ classdef nnetwork < handle
             
             % Noise injection
             inputNoise = normrnd(zeros(obj.nInput,1), obj.sigmaInputUnits);
-            a = magnitude*max(0, a + inputNoise);
+            a = max(0, a + inputNoise);
         end
         
         function [neural_output,input_activation] = network_feedforward(obj,target,exploration_noise)

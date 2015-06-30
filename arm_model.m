@@ -48,7 +48,7 @@ classdef arm_model < handle
         end
         
         function obj = default_six_muscles(obj)
-            obj.l = [1;1];
+            obj.l = [0.3;0.3];
             l_1 = obj.l(1);
             l_2 = obj.l(2);
             
@@ -57,7 +57,7 @@ classdef arm_model < handle
             
             obj.J = [-l_1*sin(q_1)-l_2*sin(q_1+q_2), -l_2*sin(q_1+q_2);
                       l_1*cos(q_1)+l_2*cos(q_1+q_2), l_2*cos(q_1+q_2)];
-            r = 1;
+            r = 0.1;
             obj.R = [r -r 0 0 r -r;
                      0 0 r -r r -r];
             obj.muscle_names = {'Sh fl';'Sh ext';

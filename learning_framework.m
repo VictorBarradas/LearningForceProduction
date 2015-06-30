@@ -192,16 +192,16 @@ classdef learning_framework
             end
         end
         
-        function identify_individual_synergy(obj,nPoints,nSynergy)
-            rEMG = muscle_activation(obj,nPoints);
+        function identify_individual_synergy(obj,nPoints,nSynergy,desMagnitude)
+            rEMG = muscle_activation(obj,nPoints,desMagnitude);
             obj.syn(nSynergy).rawEMG = rEMG;
             synergy_id(obj.syn(nSynergy));
             variance_within_synergies(obj.syn(nSynergy));
         end
         
-        function identify_all_synergies(obj,nPoints)
+        function identify_all_synergies(obj,nPoints,desMagnitude)
             for i = 1:obj.nSyn
-                identify_individual_synergy(obj,nPoints,i);
+                identify_individual_synergy(obj,nPoints,i,desMagnitude);
             end
         end
         
