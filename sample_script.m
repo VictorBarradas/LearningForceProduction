@@ -14,7 +14,7 @@ train_force_SRV(learn_process,200,[2]);
 % plot_learning_error(learn_process,200,4);
 %
 %
-identify_all_synergies(learn_process,200,2);
+identify_individual_synergy(learn_process,200,4,2);
 
 %
 % plot_rr_curve(learn_process);
