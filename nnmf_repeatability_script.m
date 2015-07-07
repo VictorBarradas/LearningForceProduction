@@ -4,15 +4,16 @@ clear
 
 load('nnetworks/lp1.mat')
 
-nSynMat = 100; % Number of synergy matrices
+nSynMat = 10; % Number of synergy matrices
 syn = cell(nSynMat,1); % Cell containing synergy matrices
+nSelectedSyn = 4;
 
 i = 1;
 
 % Run nnmf algorithm nSynMat times to get different solutions
 while i <= nSynMat
-    identify_individual_synergy(learn_process,200,4,2);   
-    syn{i} = learn_process.syn(4).W;
+    identify_individual_synergy(learn_process,200,nSelectedSyn,2);   
+    syn{i} = learn_process.syn(nSelectedSyn).W;
     nNan = sum(sum(isnan(syn{i})));
     if nNan == 0
         i = i+1;
@@ -32,5 +33,12 @@ for i = 1:nSynMat
 end
 
 r = r/nSynMat;
+
+nPlots = 5;
+random_syn = [1; randi(nSynMat-1,[nPlots - 1,1]) + 1];
+
+syn_plot = syn(random_syn);
+
+plot_synergy_comparison(syn_plot);
 
 
