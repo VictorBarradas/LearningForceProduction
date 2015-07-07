@@ -4,7 +4,7 @@ clear
 
 load('nnetworks/lp1.mat')
 
-nSynMat = 10; % Number of synergy matrices
+nSynMat = 100; % Number of synergy matrices
 syn = cell(nSynMat,1); % Cell containing synergy matrices
 nSelectedSyn = 4;
 
@@ -28,17 +28,19 @@ end
 
 % Compare the solutions
 r = zeros(size(syn{1},2),1);
+meanR = 0;
 for i = 1:nSynMat
-    r = r + compare_synergies(syn{1},syn{i});
+    r(:,i) = compare_synergies(syn{1},syn{i});
 end
 
-r = r/nSynMat;
+meanR = mean(r,2);
 
-nPlots = 5;
+nPlots = 6;
 random_syn = [1; randi(nSynMat-1,[nPlots - 1,1]) + 1];
 
 syn_plot = syn(random_syn);
+r_plot = r(:,random_syn);
 
-plot_synergy_comparison(syn_plot);
+plot_synergy_comparison(syn_plot,r_plot);
 
 

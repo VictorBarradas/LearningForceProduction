@@ -1,4 +1,4 @@
-function [] = plot_synergy_comparison(syn)
+function [] = plot_synergy_comparison(syn,r)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -15,10 +15,11 @@ for i = 1:nComp
         subplot(nSyn,nComp,i + (j-1)*nComp);
         bar(syn{i}(:,j),'FaceColor',color(j,:));
         ylim([0,1.2]);
-        xlim ([0,nMusc+1]);
+        xlim ([0,nMusc+1]);       
         %         text(5.75,1.0,strcat(num2str(obj.var(j)),'%'));
         
         if i ~= 1
+            title(strcat({'r = '},num2str(r(j,i))));
             set(gca,'YTickLabel',{});  
         end
         if j ~= nSyn
