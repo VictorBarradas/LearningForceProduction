@@ -1,4 +1,4 @@
-classdef learning_framework
+classdef learning_framework < handle
     %UNTITLED6 Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -7,6 +7,7 @@ classdef learning_framework
         arm %Arm model object
         syn %Array with possible muscle synergies (according to nn.nOutput)
         nSyn
+        emg % Learned EMG
     end
     
     methods
@@ -167,27 +168,29 @@ classdef learning_framework
             ylabel('Error in force magnitude');
         end
         
-        function emg = muscle_activation(obj,nPoints,desMagnitude)
+        function muscle_activation(obj,nPoints,desMagnitude)
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
                 if strcmp(obj.nn.type,'srv') == 1
-                    emg(:,i) = network_feedforward(obj.nn,desTheta,desMagnitude);
+                    obj.emg(:,i) = network_feedforward(obj.nn,desTheta,desMagnitude);
                 else
                     noise = zeros(obj.nn.nOutput,1);
-                    emg(:,i) = network_feedforward(obj.nn,desTheta,noise);
+                    obj.emg(:,i) = network_feedforward(obj.nn,desTheta,noise);
                 end
             end
         end
         
         function h = plot_muscle_activations(obj,nPoints,desMagnitude)
-            emg = muscle_activation(obj,nPoints,desMagnitude);
+            if isempty(obj.emg)
+                muscle_activation(obj,nPoints,desMagnitude);
+            end
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i = 1:obj.nn.nOutput
                 h(i) = figure;
                 polar(cPoints*pi/180,ones(size(cPoints)),'k');
                 hold on
-                polar(cPoints*pi/180,emg(i,:));
+                polar(cPoints*pi/180,obj.emg(i,:));
                 title(obj.arm.muscle_names(i));
             end
         end
