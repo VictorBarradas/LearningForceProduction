@@ -204,6 +204,21 @@ classdef learning_framework < handle
             end
         end
         
+        function PD = muscle_preferred_direction(obj,nPoints,desMagnitude)
+            if isempty(obj.emg)
+                muscle_activation(obj,nPoints,desMagnitude);
+            end
+            cPoints = -180:360/nPoints:180 - 360/nPoints;
+            cosfit = @(x,cPoints) x(1).*cosd(cPoints - x(2)) + x(3);
+            guess = [1,90,0];
+            lbound = [0,-180,0];
+            ubound = [10,180,10];
+            for i = 1:obj.nn.nOutput
+                fit_values = lsqcurvefit(cosfit,guess,cPoints,obj.emg(i,:),lbound,ubound);
+                PD(i) = fit_values(2);
+            end
+        end
+        
         function identify_individual_synergy(obj,nPoints,nSynergy,desMagnitude)
             rEMG = muscle_activation(obj,nPoints,desMagnitude);
             obj.syn(nSynergy).rawEMG = rEMG;
