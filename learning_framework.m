@@ -211,11 +211,20 @@ classdef learning_framework < handle
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             cosfit = @(x,cPoints) x(1).*cosd(cPoints - x(2)) + x(3);
             guess = [1,90,0];
-            lbound = [0,-180,0];
-            ubound = [10,180,10];
+            lbound = [0,-270,0];
+            ubound = [10,270,10];
             for i = 1:obj.nn.nOutput
                 fit_values = lsqcurvefit(cosfit,guess,cPoints,obj.emg(i,:),lbound,ubound);
                 PD(i) = fit_values(2);
+            end
+        end
+        
+        function plot_muscle_preferred_direction(obj,nPoints,desMagnitude,h)
+            PD = pi/180*muscle_preferred_direction(obj,nPoints,desMagnitude);
+            for i = 1:obj.nn.nOutput
+                figure(h(i));
+                hold on
+                polar([PD(i),PD(i)],[0,1],'k');
             end
         end
         
