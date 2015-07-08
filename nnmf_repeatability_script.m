@@ -1,3 +1,6 @@
+%% Synergy comparison
+% Comparison of synergies obtained by different re-runs of the nnmf 
+% algorithm on the same data set (3 synergies)
 close all
 clc
 clear
@@ -6,7 +9,7 @@ load('nnetworks/lp1.mat')
 
 nSynMat = 100; % Number of synergy matrices
 syn = cell(nSynMat,1); % Cell containing synergy matrices
-nSelectedSyn = 4;
+nSelectedSyn = 3;
 
 i = 1;
 
@@ -42,5 +45,9 @@ syn_plot = syn(random_syn);
 r_plot = r(:,random_syn);
 
 plot_synergy_comparison(syn_plot,r_plot);
+
+%% Average similarity of 100 re-runs to the first obtained synergy
+
+meanR
 
 

@@ -180,15 +180,24 @@ classdef learning_framework
             end
         end
         
-        function plot_muscle_activations(obj,nPoints,desMagnitude)
+        function h = plot_muscle_activations(obj,nPoints,desMagnitude)
             emg = muscle_activation(obj,nPoints,desMagnitude);
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i = 1:obj.nn.nOutput
-                figure
+                h(i) = figure;
                 polar(cPoints*pi/180,ones(size(cPoints)),'k');
                 hold on
                 polar(cPoints*pi/180,emg(i,:));
                 title(obj.arm.muscle_names(i));
+            end
+        end
+        
+        function plot_muscle_pulling_direction(obj,h)
+            pullDir = pi/180*muscle_pulling_direction(obj.arm);
+            for i = 1:obj.nn.nOutput
+                figure(h(i));
+                hold on
+                polar([pullDir(i),pullDir(i)],[0,1],'r');
             end
         end
         

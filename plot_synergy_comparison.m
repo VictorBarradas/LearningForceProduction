@@ -19,7 +19,8 @@ for i = 1:nComp
         %         text(5.75,1.0,strcat(num2str(obj.var(j)),'%'));
         
         if i ~= 1
-            title(strcat({'r = '},num2str(r(j,i))));
+            %title(strcat({'r = '},num2str(r(j,i))));
+            title(num2str(r(j,i)));
             set(gca,'YTickLabel',{});  
         end
         if j ~= nSyn

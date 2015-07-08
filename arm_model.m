@@ -25,7 +25,19 @@ classdef arm_model < handle
             JIT = transpose(inv(obj.J));
             f = JIT*obj.R*obj.F0*a;           
             %magnitude = norm(f);
-            %direction = 180/pi*atan2(f(1), f(2));
+            %direction = 180/pi*atan2(f(2), f(1));
+        end
+        
+        function pullDir = muscle_pulling_direction(obj)
+            nMus = size(obj.R,2);
+            a = zeros(nMus,1);
+            a(1) = 1;
+            pullDir = zeros(nMus,1);
+            for i = 1:nMus
+                f = activation2force(obj,a);
+                pullDir(i) = 180/pi*atan2(f(2), f(1));
+                a = circshift(a,1);
+            end
         end
         
         function default_four_muscles(obj)
