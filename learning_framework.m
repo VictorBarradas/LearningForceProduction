@@ -3,11 +3,12 @@ classdef learning_framework < handle
     %   Detailed explanation goes here
     
     properties
-        nn %Neural network object
-        arm %Arm model object
-        syn %Array with possible muscle synergies (according to nn.nOutput)
+        nn % Neural network object
+        arm % Arm model object
+        syn % Array with possible muscle synergies (according to nn.nOutput)
         nSyn
         emg % Learned EMG
+        force_levels % Magnitudes of forces to be learned by the system
     end
     
     methods
@@ -19,6 +20,7 @@ classdef learning_framework < handle
                 temp(i) = synergy([],arm.muscle_names,i);
             end
             obj.syn = temp;
+            obj.force_levels = [];
         end
         
         function train_force_annealing(obj,nTrainingGroup)
@@ -63,22 +65,23 @@ classdef learning_framework < handle
         end
         
         function train_force_SRV(obj,nTrainingGroup,forceLevels)
+            obj.force_levels = forceLevels;
             % Reinforcement terms
             alpha = 0.005; % learning rate
             beta = 0.005; % learning rate
             rewardThreshold = 1;
             nTrials = 3000;
             
-            stackedForceLevels = repmat(forceLevels,nTrainingGroup,1);
+            stackedForceLevels = repmat(obj.force_levels,nTrainingGroup,1);
             stackedForceLevels = stackedForceLevels(:);
-            cTrainingGroup = repmat(-180:360/nTrainingGroup:180-360/nTrainingGroup,1,length(forceLevels));
+            cTrainingGroup = repmat(-180:360/nTrainingGroup:180-360/nTrainingGroup,1,length(obj.force_levels));
             cTrainingGroup = [cTrainingGroup;stackedForceLevels'];
-            randomOrder = randperm(length(forceLevels)*nTrainingGroup);
+            randomOrder = randperm(length(obj.force_levels)*nTrainingGroup);
             aa = 1/8;
             bb = 1/8;
             cc = 1/8;
             
-            for j = 1:nTrainingGroup*length(forceLevels)
+            for j = 1:nTrainingGroup*length(obj.force_levels)
                 desTheta = cTrainingGroup(1,randomOrder(j));
                 desMagnitude = cTrainingGroup(2,randomOrder(j));
                 desForce = desMagnitude*[cos(desTheta*pi/180);sin(desTheta*pi/180)];
@@ -105,12 +108,12 @@ classdef learning_framework < handle
             end
         end
         
-        function plot_learned_force(obj,nPoints,forceLevels)            
+        function plot_learned_force(obj,nPoints)            
             cPoints = -180:360/nPoints:180-360/nPoints;
-            for j = 1:length(forceLevels)
+            for j = 1:length(obj.force_levels)
                 for i=1:nPoints
                     desTheta = cPoints(1,i);
-                    desMagnitude = forceLevels(j);
+                    desMagnitude = obj.force_levels(j);
                     angle(i) = desTheta;
                     if strcmp(obj.nn.type,'srv') == 1
                         muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
@@ -140,7 +143,9 @@ classdef learning_framework < handle
             end
         end
         
-        function plot_learning_error(obj,nPoints,desMagnitude)
+        % Modify function to admit several force levels
+        function plot_learning_error(obj,nPoints)
+            desMagnitude = obj.force_levels;
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
@@ -168,7 +173,9 @@ classdef learning_framework < handle
             ylabel('Error in force magnitude');
         end
         
-        function muscle_activation(obj,nPoints,desMagnitude)
+        % Modify function to admit several force levels
+        function muscle_activation(obj,nPoints)
+            desMagnitude = obj.force_levels;
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
@@ -181,9 +188,9 @@ classdef learning_framework < handle
             end
         end
         
-        function h = plot_muscle_activations(obj,nPoints,desMagnitude)
+        function h = plot_muscle_activations(obj,nPoints)
             if isempty(obj.emg)
-                muscle_activation(obj,nPoints,desMagnitude);
+                muscle_activation(obj,nPoints);
             end
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i = 1:obj.nn.nOutput
@@ -204,9 +211,9 @@ classdef learning_framework < handle
             end
         end
         
-        function PD = muscle_preferred_direction(obj,nPoints,desMagnitude)
+        function PD = muscle_preferred_direction(obj,nPoints)
             if isempty(obj.emg)
-                muscle_activation(obj,nPoints,desMagnitude);
+                muscle_activation(obj,nPoints);
             end
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             cosfit = @(x,cPoints) x(1).*cosd(cPoints - x(2)) + x(3);
@@ -219,8 +226,8 @@ classdef learning_framework < handle
             end
         end
         
-        function plot_muscle_preferred_direction(obj,nPoints,desMagnitude,h)
-            PD = pi/180*muscle_preferred_direction(obj,nPoints,desMagnitude);
+        function plot_muscle_preferred_direction(obj,nPoints,h)
+            PD = pi/180*muscle_preferred_direction(obj,nPoints);
             for i = 1:obj.nn.nOutput
                 figure(h(i));
                 hold on
@@ -228,16 +235,18 @@ classdef learning_framework < handle
             end
         end
         
-        function identify_individual_synergy(obj,nPoints,nSynergy,desMagnitude)
-            rEMG = muscle_activation(obj,nPoints,desMagnitude);
-            obj.syn(nSynergy).rawEMG = rEMG;
+        function identify_individual_synergy(obj,nPoints,nSynergy)
+            if isempty(obj.emg)
+                muscle_activation(obj,nPoints);
+            end
+            obj.syn(nSynergy).rawEMG = obj.emg;
             synergy_id(obj.syn(nSynergy));
             variance_within_synergies(obj.syn(nSynergy));
         end
         
-        function identify_all_synergies(obj,nPoints,desMagnitude)
+        function identify_all_synergies(obj,nPoints)
             for i = 1:obj.nSyn
-                identify_individual_synergy(obj,nPoints,i,desMagnitude);
+                identify_individual_synergy(obj,nPoints,i);
             end
         end
         
