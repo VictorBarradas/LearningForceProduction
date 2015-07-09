@@ -1,3 +1,5 @@
+% Testing committing on master branch while network_learning branch is
+% bifurcated
 close all
 clc
 clear
