@@ -2,7 +2,7 @@ classdef nnetworkSRV < nnetwork
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties (Transient = false)
+    properties
         V
         wThreshold
         vThreshold
@@ -28,6 +28,10 @@ classdef nnetworkSRV < nnetwork
             sigmaOutput = max(1 - expReward, 0.01);
             activationOutput = normrnd(muOutput,sigmaOutput);
             neural_output = 1./(1 + exp(-activationOutput));
+        end
+        
+        function network_learning(obj)
+            
         end
     end
     
