@@ -66,10 +66,7 @@ classdef learning_framework < handle
         
         function train_force_SRV(obj,nTrainingGroup,forceLevels)
             obj.force_levels = forceLevels;
-            % Reinforcement terms
-            alpha = 0.005; % learning rate
-            beta = 0.005; % learning rate
-            rewardThreshold = 1;
+            
             nTrials = 3000;
             
             stackedForceLevels = repmat(obj.force_levels,nTrainingGroup,1);
@@ -77,6 +74,8 @@ classdef learning_framework < handle
             cTrainingGroup = repmat(-180:360/nTrainingGroup:180-360/nTrainingGroup,1,length(obj.force_levels));
             cTrainingGroup = [cTrainingGroup;stackedForceLevels'];
             randomOrder = randperm(length(obj.force_levels)*nTrainingGroup);
+            rewardThreshold = 1; % threshold for reward
+            % Cost function terms
             aa = 1/8;
             bb = 1/8;
             cc = 1/8;
@@ -86,24 +85,16 @@ classdef learning_framework < handle
                 desMagnitude = cTrainingGroup(2,randomOrder(j));
                 desForce = desMagnitude*[cos(desTheta*pi/180);sin(desTheta*pi/180)];
                 for i = 1:nTrials
-                    [muscleActivation,inputActivation,expReward,activationOutput,muOutput,sigmaOutput] = network_feedforward(obj.nn,desTheta,desMagnitude);
+                    muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
                     
+                    % Interaction with the environment
                     endForce = activation2force(obj.arm, muscleActivation);
                     errorForce = norm(desForce - endForce);
-                    
+                    % Cost and evaluation
                     cost = aa*errorForce + cc*sum(muscleActivation.^2);
                     reward = max(0,(rewardThreshold - cost)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
                     
-                    % Learning
-                    deltaW = (reward - expReward).*(activationOutput - muOutput)./sigmaOutput;
-                    weightTerm = inputActivation*deltaW';
-                    obj.nn.W = obj.nn.W + alpha*weightTerm;
-                    obj.nn.wThreshold = obj.nn.wThreshold + alpha*deltaW;
-                    
-                    deltaV = reward - expReward;
-                    obj.nn.V = obj.nn.V + beta*inputActivation*deltaV';
-                    obj.nn.vThreshold = obj.nn.vThreshold + beta*deltaV;
-                    
+                    network_learning(obj.nn,reward);                   
                 end
             end
         end
