@@ -7,7 +7,10 @@ default_six_muscles(arm);
 
 nn = nnetworkSRV(180,size(arm.R,2));
 
-learn_process = learning_framework(nn,arm);
+weights = [1/8;1/8];
+costF = cost_isometric_force(weights);
+
+learn_process = learning_framework(nn,arm,costF);
 train_force_production(learn_process,200,[2]);
 % train_force_annealing(learn_process,20);
 plot_learned_force(learn_process,200);

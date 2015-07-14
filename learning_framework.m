@@ -9,12 +9,14 @@ classdef learning_framework < handle
         nSyn
         emg % Learned EMG
         force_levels % Magnitudes of forces to be learned by the system
+        cost_function % Cost function object
     end
     
     methods
-        function obj = learning_framework(nnetwork,arm)
+        function obj = learning_framework(nnetwork,arm,costF)
             obj.nn = nnetwork;
             obj.arm = arm;
+            obj.cost_function = costF;
             obj.nSyn = nnetwork.nOutput;
             for i = 1:obj.nSyn
                 temp(i) = synergy([],arm.muscle_names,i);
@@ -34,9 +36,6 @@ classdef learning_framework < handle
             cTrainingGroup = [cTrainingGroup;stackedForceLevels'];
             randomOrder = randperm(length(obj.force_levels)*nTrainingGroup);
             rewardThreshold = 1; % threshold for reward
-            % Cost function terms
-            aa = 1/8;
-            cc = 1/8;
             
             for j = 1:nTrainingGroup*length(obj.force_levels)
                 desTheta = cTrainingGroup(1,randomOrder(j));
@@ -53,12 +52,12 @@ classdef learning_framework < handle
                     endForce = activation2force(obj.arm, muscleActivation);
                     errorForce = norm(desForce - endForce);
                     % Cost and evaluation
-                    cost = aa*errorForce + cc*sum(muscleActivation.^2);
+                    u = cost(obj.cost_function,errorForce,muscleActivation);
                     
                     if strcmp(obj.nn.type,'anneal')
-                        reward = max(0,(rewardThreshold - cost)/rewardThreshold);
+                        reward = max(0,(rewardThreshold - u)/rewardThreshold);
                     elseif strcmp(obj.nn.type,'srv')
-                        reward = max(0,(rewardThreshold - cost)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
+                        reward = max(0,(rewardThreshold - u)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
                     end
                     network_learning(obj.nn,reward);                   
                 end
