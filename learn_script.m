@@ -8,7 +8,7 @@ default_six_muscles(arm);
 nn = nnetworkSRV(180,size(arm.R,2));
 
 learn_process = learning_framework(nn,arm);
-train_force_SRV(learn_process,200,[2]);
+train_force_production(learn_process,10,[2]);
 
 path = 'nnetworks';
 files = dir([path, '/lp*.mat']);
