@@ -23,48 +23,7 @@ classdef learning_framework < handle
             obj.force_levels = [];
         end
         
-        function train_force_annealing(obj,nTrainingGroup)
-            % Reinforcement terms
-            expReward = 0; % expected reward
-            alpha = 0.025; % learning rate
-            gamma = 0.0125; % learning rate
-            rewardThreshold = 1;
-            sigmaExplorationMax = 20; %max exploration noise
-            nTrials = 1000;
-            
-            cTrainingGroup = -180:360/nTrainingGroup:180 - 360/nTrainingGroup;
-            randomOrder = randperm(nTrainingGroup);
-            bb = 1/8;
-            cc = 1/2;
-            desMagnitude = 4;
-            
-            for j = 1:nTrainingGroup
-                desTheta = cTrainingGroup(randomOrder(j));
-                for i = 1:nTrials
-                    % Output
-                    %Simulated annealing approach
-                    sigmaExploration = sigmaExplorationMax*(1 - expReward)*(1 - i/nTrials)*ones(obj.nn.nOutput,1);
-                    explorationNoise = normrnd(0,sigmaExploration);
-                    
-                    [muscleActivation,inputActivation] = network_feedforward(obj.nn,desTheta,explorationNoise);
-                    
-                    [magnitude,theta] = activation2force(obj.arm, muscleActivation);
-                    
-                    cost = (pi/180*(theta - desTheta))^2 + bb*(magnitude - desMagnitude)^2 + cc*sum(muscleActivation.^2);
-                    
-                    reward = max(0,(rewardThreshold - cost)/rewardThreshold); % reward function
-                    %trackingVariable(i) = cost;
-                    % Learning
-                    
-                    obj.nn.W = obj.nn.W + alpha*(reward - expReward)*repmat(inputActivation,1,obj.nn.nOutput).*repmat(explorationNoise',obj.nn.nInput,1);
-                    expReward = expReward + gamma*(reward - expReward);
-                    
-                end
-                %plot(trackingVariable);
-            end
-        end
-        
-        function train_force_SRV(obj,nTrainingGroup,forceLevels)
+        function train_force_production(obj,nTrainingGroup,forceLevels)
             obj.force_levels = forceLevels;
             
             nTrials = 3000;
@@ -77,7 +36,6 @@ classdef learning_framework < handle
             rewardThreshold = 1; % threshold for reward
             % Cost function terms
             aa = 1/8;
-            bb = 1/8;
             cc = 1/8;
             
             for j = 1:nTrainingGroup*length(obj.force_levels)
@@ -85,15 +43,23 @@ classdef learning_framework < handle
                 desMagnitude = cTrainingGroup(2,randomOrder(j));
                 desForce = desMagnitude*[cos(desTheta*pi/180);sin(desTheta*pi/180)];
                 for i = 1:nTrials
-                    muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
+                    if strcmp(obj.nn.type,'anneal')
+                         muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude,nTrials,i);
+                    elseif strcmp(obj.nn.type,'srv')
+                        muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
+                    end
                     
                     % Interaction with the environment
                     endForce = activation2force(obj.arm, muscleActivation);
                     errorForce = norm(desForce - endForce);
                     % Cost and evaluation
                     cost = aa*errorForce + cc*sum(muscleActivation.^2);
-                    reward = max(0,(rewardThreshold - cost)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
                     
+                    if strcmp(obj.nn.type,'anneal')
+                        reward = max(0,(rewardThreshold - cost)/rewardThreshold);
+                    elseif strcmp(obj.nn.type,'srv')
+                        reward = max(0,(rewardThreshold - cost)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
+                    end
                     network_learning(obj.nn,reward);                   
                 end
             end
@@ -108,9 +74,8 @@ classdef learning_framework < handle
                     angle(i) = desTheta;
                     if strcmp(obj.nn.type,'srv') == 1
                         muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
-                    else
-                        exploration_noise = zeros(obj.nn.nOutput,1);
-                        muscleActivation = network_feedforward(obj.nn,desTheta,exploration_noise);
+                    elseif strcmp(obj.nn.type,'anneal') == 1
+                        muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude,1,1);
                     end
                     endForce = activation2force(obj.arm, muscleActivation);
                     theta(i) = 180/pi*atan2(endForce(2), endForce(1));
@@ -143,9 +108,8 @@ classdef learning_framework < handle
                 angle(i) = desTheta;
                 if strcmp(obj.nn.type,'srv') == 1
                     muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
-                else
-                    exploration_noise = zeros(obj.nn.nOutput,1);
-                    muscleActivation = network_feedforward(obj.nn,desTheta,exploration_noise);
+                elseif strcmp(obj.nn.type,'anneal') == 1
+                    muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude,1,1);
                 end
                 endForce = activation2force(obj.arm, muscleActivation);
                 magnitude(i) = norm(endForce);
@@ -172,9 +136,8 @@ classdef learning_framework < handle
                 desTheta = cPoints(i);
                 if strcmp(obj.nn.type,'srv') == 1
                     obj.emg(:,i) = network_feedforward(obj.nn,desTheta,desMagnitude);
-                else
-                    noise = zeros(obj.nn.nOutput,1);
-                    obj.emg(:,i) = network_feedforward(obj.nn,desTheta,noise);
+                elseif strcmp(obj.nn.type,'anneal')
+                    obj.emg(:,i) = network_feedforward(obj.nn,desTheta,desMagnitude,1,1);
                 end
             end
         end
