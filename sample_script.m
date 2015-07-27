@@ -11,7 +11,7 @@ weights = [1/8;1/8];
 costF = cost_isometric_force(weights);
 
 learn_process = learning_framework(nn,arm,costF);
-train_force_production(learn_process,10,[2]);
+train_force_production(learn_process,200,[2]);
 % train_force_annealing(learn_process,20);
 plot_learned_force(learn_process,200);
 fig_handles = plot_muscle_activations(learn_process,200);
