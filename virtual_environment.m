@@ -10,6 +10,8 @@ classdef virtual_environment < handle
         m % Particle mass
         k % Stiffness
         b % Damping factor
+        % Plot properties
+        cursor_handle
     end
     
     methods
@@ -46,11 +48,18 @@ classdef virtual_environment < handle
         end
         
         function plot_cursor(obj,h)
+            delete(obj.cursor_handle);
             figure(h)
-            plot(obj.position(1),obj.position(2),'.','MarkerSize',40);
+            obj.cursor_handle = plot(obj.position(1),obj.position(2),'.','MarkerSize',40);
             xlim([-3,3]);
             ylim([-3,3]);
             daspect([1 1 1])
+        end
+        
+        function plot_target(obj,h,target)
+            figure(h)
+            plot(target(1),target(2),'r.','MarkerSize',40);
+            hold on
         end
         
     end

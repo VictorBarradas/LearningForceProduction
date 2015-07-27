@@ -39,7 +39,7 @@ classdef nnetworkSRV < nnetwork
             obj.input_activation = input_layer_activation(obj,direction,magnitude);
             obj.muOutput = obj.W'*obj.input_activation + obj.wThreshold;
             obj.expReward = obj.V'*obj.input_activation + obj.vThreshold;
-            obj.sigmaOutput = max(1 - obj.expReward, 0.01);
+            obj.sigmaOutput = max(1 - obj.expReward, 0.001);
             obj.activationOutput = normrnd(obj.muOutput,obj.sigmaOutput);
             neural_output = 1./(1 + exp(-obj.activationOutput));
         end
