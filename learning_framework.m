@@ -57,7 +57,7 @@ classdef learning_framework < handle
                     if strcmp(obj.nn.type,'anneal')
                         reward = max(0,(rewardThreshold - u)/rewardThreshold);
                     elseif strcmp(obj.nn.type,'srv')
-                        reward = max(0,(rewardThreshold - u)/rewardThreshold)*ones(obj.nn.nOutput,1); % reward function
+                        reward = max(0,(rewardThreshold - u)/rewardThreshold); % reward function
                     end
                     network_learning(obj.nn,reward);                   
                 end
