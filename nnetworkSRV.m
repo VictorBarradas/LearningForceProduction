@@ -12,7 +12,6 @@ classdef nnetworkSRV < nnetwork
     properties (Transient = true)
         alpha % learning rate
         beta % learning rate
-        input_activation
         layerInput
         expReward
         activationOutput
@@ -33,14 +32,9 @@ classdef nnetworkSRV < nnetwork
             obj.alpha = 0.005;
             obj.beta = 0.005;
         end
-        
-        function a = input_layer_activation(obj,direction,magnitude)
-            a = input_layer_activation@nnetwork(obj,direction,magnitude);
-        end
-        
-        function neural_output = network_feedforward(obj,direction,magnitude)
-            obj.input_activation = input_layer_activation(obj,direction,magnitude);
-            obj.layerInput{1} = obj.input_activation;
+                
+        function neural_output = network_feedforward(obj,input)
+            obj.layerInput{1} = input;
             for i = 1:obj.nLayers - 1
                 obj.muOutput{i} = obj.W{i}'*obj.layerInput{i} + obj.wThreshold{i};
                 obj.expReward{i} = obj.V{i}'*obj.layerInput{i} + obj.vThreshold{i};

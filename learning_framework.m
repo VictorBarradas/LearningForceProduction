@@ -41,11 +41,12 @@ classdef learning_framework < handle
                 desTheta = cTrainingGroup(1,randomOrder(j));
                 desMagnitude = cTrainingGroup(2,randomOrder(j));
                 desForce = desMagnitude*[cos(desTheta*pi/180);sin(desTheta*pi/180)];
+                input = population_code(obj.nn.nInput,desTheta,desMagnitude);
                 for i = 1:nTrials
                     if strcmp(obj.nn.type,'anneal')
-                         muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude,nTrials,i);
-                    elseif strcmp(obj.nn.type,'srv')
-                        muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
+                        muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude,nTrials,i);
+                    elseif strcmp(obj.nn.type,'srv')     
+                        muscleActivation = network_feedforward(obj.nn,input);
                     end
                     
                     % Interaction with the environment
@@ -59,26 +60,27 @@ classdef learning_framework < handle
                     elseif strcmp(obj.nn.type,'srv')
                         reward = max(0,(rewardThreshold - u)/rewardThreshold); % reward function
                     end
-                    network_learning(obj.nn,reward);                   
+                    network_learning(obj.nn,reward);
                 end
             end
         end
         
-        function plot_learned_force(obj,nPoints)            
+        function plot_learned_force(obj,nPoints)
             cPoints = -180:360/nPoints:180-360/nPoints;
             for j = 1:length(obj.force_levels)
                 for i=1:nPoints
                     desTheta = cPoints(1,i);
                     desMagnitude = obj.force_levels(j);
                     angle(i) = desTheta;
+                    input = population_code(obj.nn.nInput,desTheta,desMagnitude);
                     if strcmp(obj.nn.type,'srv') == 1
-                        muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
+                        muscleActivation = network_feedforward(obj.nn,input);
                     elseif strcmp(obj.nn.type,'anneal') == 1
                         muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude,1,1);
                     end
                     endForce = activation2force(obj.arm, muscleActivation);
                     theta(i) = 180/pi*atan2(endForce(2), endForce(1));
-                    magnitude(i) = norm(endForce);  
+                    magnitude(i) = norm(endForce);
                 end
                 
                 figure
@@ -105,8 +107,9 @@ classdef learning_framework < handle
             for i=1:nPoints
                 desTheta = cPoints(i);
                 angle(i) = desTheta;
+                input = population_code(obj.nn.nInput,desTheta,desMagnitude);
                 if strcmp(obj.nn.type,'srv') == 1
-                    muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude);
+                    muscleActivation = network_feedforward(obj.nn,input);
                 elseif strcmp(obj.nn.type,'anneal') == 1
                     muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude,1,1);
                 end
@@ -133,8 +136,9 @@ classdef learning_framework < handle
             cPoints = -180:360/nPoints:180 - 360/nPoints;
             for i=1:nPoints
                 desTheta = cPoints(i);
+                 input = population_code(obj.nn.nInput,desTheta,desMagnitude);
                 if strcmp(obj.nn.type,'srv') == 1
-                    obj.emg(:,i) = network_feedforward(obj.nn,desTheta,desMagnitude);
+                    obj.emg(:,i) = network_feedforward(obj.nn,input);
                 elseif strcmp(obj.nn.type,'anneal')
                     obj.emg(:,i) = network_feedforward(obj.nn,desTheta,desMagnitude,1,1);
                 end
