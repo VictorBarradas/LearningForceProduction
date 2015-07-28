@@ -7,6 +7,7 @@ classdef nnetworkSRV < nnetwork
         V
         wThreshold
         vThreshold
+        restrictExploration
     end
     
     properties (Transient = true)
@@ -31,6 +32,7 @@ classdef nnetworkSRV < nnetwork
             % Learning
             obj.alpha = 0.005;
             obj.beta = 0.005;
+            obj.restrictExploration = true;
         end
                 
         function neural_output = network_feedforward(obj,input)
@@ -40,6 +42,12 @@ classdef nnetworkSRV < nnetwork
                 obj.expReward{i} = obj.V{i}'*obj.layerInput{i} + obj.vThreshold{i};
                 obj.sigmaOutput{i} = max(1 - obj.expReward{i}, 0.001);
                 obj.activationOutput{i} = normrnd(obj.muOutput{i},obj.sigmaOutput{i});
+                if obj.restrictExploration
+                    b = obj.activationOutput{i} > obj.muOutput{i} + 2*obj.sigmaOutput{i};
+                    obj.activationOutput{i}(b) = obj.muOutput{i}(b) + 2*obj.sigmaOutput{i}(b);
+                    b = obj.activationOutput{i} < obj.muOutput{i} - 2*obj.sigmaOutput{i};
+                    obj.activationOutput{i}(b) = obj.muOutput{i}(b) - 2*obj.sigmaOutput{i}(b);
+                end
                 if i < obj.nLayers - 1
                     obj.layerInput{i+1} = obj.activationOutput{i};
                 end
