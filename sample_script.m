@@ -5,7 +5,7 @@ clear
 arm = arm_model([45;90],0,0,0,0,0);
 default_six_muscles(arm);
 
-nn = nnetworkSRV(180,size(arm.R,2));
+nn = nnetworkSRV([180,size(arm.R,2)]);
 
 weights = [1/8;1/8];
 costF = cost_isometric_force(weights);
