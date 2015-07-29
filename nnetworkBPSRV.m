@@ -13,7 +13,6 @@ classdef nnetworkBPSRV < nnetwork
     properties (Transient = true)
         alpha % learning rate
         beta % learning rate
-        layerInput
         expReward
         activationOutput
         muOutput
