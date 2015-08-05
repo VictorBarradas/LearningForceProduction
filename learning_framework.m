@@ -45,8 +45,10 @@ classdef learning_framework < handle
                 for i = 1:nTrials
                     if strcmp(obj.nn.type,'anneal')
                         muscleActivation = network_feedforward(obj.nn,desTheta,desMagnitude,nTrials,i);
-                    elseif strcmp(obj.nn.type,'srv') || strcmp(obj.nn.type,'bp_srv')    
+                    elseif strcmp(obj.nn.type,'srv')   
                         muscleActivation = network_feedforward(obj.nn,input);
+                    elseif strcmp(obj.nn.type,'bp_srv') 
+                        muscleActivation = nnetwork_feedforward(obj.nn,input);
                     end
                     
                     % Interaction with the environment
@@ -57,8 +59,13 @@ classdef learning_framework < handle
                     
                     if strcmp(obj.nn.type,'anneal')
                         reward = max(0,(rewardThreshold - u)/rewardThreshold);
-                    elseif strcmp(obj.nn.type,'srv') || strcmp(obj.nn.type,'bp_srv')
-                        reward = max(0,(rewardThreshold - u)/rewardThreshold); % reward function
+                        network_learning(obj.nn,reward);
+                    elseif strcmp(obj.nn.type,'srv') 
+                        reward = max(0,(rewardThreshold - u)/rewardThreshold);
+                        network_learning(obj.nn,reward);
+                    elseif strcmp(obj.nn.type,'bp_srv')
+                        reward = max(0,(rewardThreshold - u)/rewardThreshold);
+                        network_learning(obj.nn,reward);
                     end
                     network_learning(obj.nn,reward);
                 end
