@@ -50,13 +50,14 @@ classdef nnetworkBPSRV < nnetwork
             % Forward propagation (last hidden to Output)
             obj.muOutput = obj.W{end}'*obj.hiddenOutput{end} + obj.wThreshold;
             obj.expReward = obj.V'*obj.hiddenOutput{end} + obj.vThreshold;
-            obj.sigmaOutput = max(obj.rewardThreshold - obj.expReward, 0.001);
+            %obj.sigmaOutput = max((obj.rewardThreshold - obj.expReward), 0.001);
+            obj.sigmaOutput = 2*exp(-(obj.expReward)/0.2);
             obj.activationOutput = normrnd(obj.muOutput,obj.sigmaOutput);
             if obj.restrictExploration
-                b = obj.activationOutput > obj.muOutput + 2*obj.sigmaOutput;
-                obj.activationOutput(b) = obj.muOutput(b) + 2*obj.sigmaOutput(b);
-                b = obj.activationOutput < obj.muOutput - 2*obj.sigmaOutput;
-                obj.activationOutput(b) = obj.muOutput(b) - 2*obj.sigmaOutput(b);
+                b = obj.activationOutput > obj.muOutput + 1*obj.sigmaOutput;
+                obj.activationOutput(b) = obj.muOutput(b) + 1*obj.sigmaOutput(b);
+                b = obj.activationOutput < obj.muOutput - 1*obj.sigmaOutput;
+                obj.activationOutput(b) = obj.muOutput(b) - 1*obj.sigmaOutput(b);
             end
             
             neural_output = 1./(1 + exp(-obj.activationOutput));
