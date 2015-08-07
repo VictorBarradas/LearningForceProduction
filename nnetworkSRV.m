@@ -18,6 +18,7 @@ classdef nnetworkSRV < nnetwork
         activationOutput
         muOutput
         sigmaOutput
+        deltaW
     end
     
     methods
@@ -40,7 +41,8 @@ classdef nnetworkSRV < nnetwork
             for i = 1:obj.nLayers - 1
                 obj.muOutput{i} = obj.W{i}'*obj.layerInput{i} + obj.wThreshold{i};
                 obj.expReward{i} = obj.V{i}'*obj.layerInput{i} + obj.vThreshold{i};
-                obj.sigmaOutput{i} = max(1 - obj.expReward{i}, 0.001);
+                %obj.sigmaOutput{i} = max(1 - obj.expReward{i}, 0.001);
+                obj.sigmaOutput{i} = 2*exp(-(obj.expReward{i})/0.2);
                 obj.activationOutput{i} = normrnd(obj.muOutput{i},obj.sigmaOutput{i});
                 if obj.restrictExploration
                     b = obj.activationOutput{i} > obj.muOutput{i} + 2*obj.sigmaOutput{i};
@@ -57,10 +59,10 @@ classdef nnetworkSRV < nnetwork
         
         function network_learning(obj,reward)
             for i = obj.nLayers-1:-1:1
-                deltaW = (reward - obj.expReward{i}).*(obj.activationOutput{i} - obj.muOutput{i})./obj.sigmaOutput{i};
-                weightTerm = obj.layerInput{i}*deltaW';
+                obj.deltaW = (reward - obj.expReward{i}).*(obj.activationOutput{i} - obj.muOutput{i})./obj.sigmaOutput{i};
+                weightTerm = obj.layerInput{i}*obj.deltaW';
                 obj.W{i} = obj.W{i} + obj.alpha*weightTerm;
-                obj.wThreshold{i} = obj.wThreshold{i} + obj.alpha*deltaW;
+                obj.wThreshold{i} = obj.wThreshold{i} + obj.alpha*obj.deltaW;
                 
                 deltaV = reward - obj.expReward{i};
                 obj.V{i} = obj.V{i} + obj.beta*obj.layerInput{i}*deltaV';
