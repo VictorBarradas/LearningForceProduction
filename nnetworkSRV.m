@@ -41,8 +41,8 @@ classdef nnetworkSRV < nnetwork
             for i = 1:obj.nLayers - 1
                 obj.muOutput{i} = obj.W{i}'*obj.layerInput{i} + obj.wThreshold{i};
                 obj.expReward{i} = obj.V{i}'*obj.layerInput{i} + obj.vThreshold{i};
-                %obj.sigmaOutput{i} = max(1 - obj.expReward{i}, 0.001);
-                obj.sigmaOutput{i} = 2*exp(-(obj.expReward{i})/0.2);
+                obj.sigmaOutput{i} = max(1 - obj.expReward{i}, 0.001);
+                %obj.sigmaOutput{i} = 2*exp(-(obj.expReward{i})/0.2);
                 obj.activationOutput{i} = normrnd(obj.muOutput{i},obj.sigmaOutput{i});
                 if obj.restrictExploration
                     b = obj.activationOutput{i} > obj.muOutput{i} + 2*obj.sigmaOutput{i};
