@@ -45,6 +45,7 @@ classdef nnetworkBP < nnetwork
             tempW = obj.W{end}(1:end-1,:);
             %tempW = obj.W{end};
             obj.W{end} = obj.W{end} + obj.alpha*obj.layerInput{end}*deltaError';
+            
             for i = obj.nLayers-2:-1:1                          
                 deltaError = obj.layerOutput{i}.*(1-obj.layerOutput{i}).*(tempW*deltaError);
                 tempW = obj.W{i}(1:end-1,:);
